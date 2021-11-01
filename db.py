@@ -3,6 +3,10 @@ import pickle
 
 def db_users_writer(username, subgroup_num=None,
                     db_filename='users.pickle'):
+    """
+    Saves the information about a user
+    Or updates the database with a new subgroup
+    """
     data = db_reader(db_filename)
     with open(db_filename, 'wb') as db_:
         if username not in data:
@@ -14,6 +18,10 @@ def db_users_writer(username, subgroup_num=None,
 
 
 def db_queue_writer(user, db_filename='queueBot_db.pickle'):
+    """
+    Creates a specific queue if it isn't
+    And pushes a user into the queue
+    """
     user_data = db_reader()
     queue_data = db_reader(db_filename)
     user_subgroup = user_data[user]['subgroup']
@@ -28,7 +36,10 @@ def db_queue_writer(user, db_filename='queueBot_db.pickle'):
             pass
 
 
-def queue_deleter(subgroup):
+def db_queue_deleter(subgroup):
+    """
+    Deletes the created queue
+    """
     db_filename = 'queueBot_db.pickle'
 
     data = db_reader(db_filename)
@@ -38,7 +49,36 @@ def queue_deleter(subgroup):
         pickle.dump(data, db)
 
 
+def db_queue_out(username, subgroup):
+    """
+    Pulls a user out of the queue
+    """
+    db_filename = 'queueBot_db.pickle'
+
+    data = db_reader(db_filename)
+    data[subgroup].pop(username)
+
+    with open(db_filename, 'wb') as db:
+        pickle.dump(data, db)
+
+
+def db_reader(db_filename='users.pickle'):
+    """
+    Returns the user's dict or the queue's dict
+    """
+    try:
+        with open(db_filename, 'rb') as db:
+            data = pickle.load(db)
+    except EOFError:
+        data = {}
+
+    return data
+
+
 def is_queue_created(subgroup):
+    """
+    Checks out whether the queue is created and returns the appropriate value
+    """
     db_filename = 'queueBot_db.pickle'
 
     data = db_reader(db_filename)
@@ -48,16 +88,6 @@ def is_queue_created(subgroup):
         return 0
     else:
         return 1
-
-
-def db_reader(db_filename='users.pickle'):
-    try:
-        with open(db_filename, 'rb') as db:
-            data = pickle.load(db)
-    except EOFError:
-        data = {}
-
-    return data
 
 
 def db_del():

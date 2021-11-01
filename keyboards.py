@@ -1,4 +1,5 @@
-from telebot.types import InlineKeyboardButton, InlineKeyboardMarkup, ReplyKeyboardMarkup, KeyboardButton
+from telebot.types import InlineKeyboardButton, InlineKeyboardMarkup,\
+                          ReplyKeyboardMarkup, KeyboardButton
 
 
 def reply_keyboard():
