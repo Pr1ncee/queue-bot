@@ -1,3 +1,5 @@
+from pathlib import Path
+
 from db import db_reader, db_queue_writer, db_queue_deleter, db_queue_out, is_queue_created
 from keyboards import inline_keyboard
 
@@ -100,7 +102,8 @@ def join_queue(bot_obj, sb, id_chat, msg_id, queue_caption):
     :param msg_id: id of queue message
     :param queue_caption: the caption of queue message
     """
-    queue_data = db_reader('queueBot_db.pickle')
+    db_filename = Path("..") / "databases" / "queueBot_db.pickle"
+    queue_data = db_reader(db_filename)
     queue_list = queue_list_creator(queue_data[sb])  # The list with users in queue
     output = queue_caption
     for user_data in queue_list:

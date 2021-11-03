@@ -1,5 +1,7 @@
 # TODO: The message with a queue must be sent to every user in a subgroup!
 # TODO: To make queue counter work properly!
+from pathlib import Path
+
 import telebot
 from telebot.types import CallbackQuery
 
@@ -13,6 +15,7 @@ from queue_methods import queue_in, queue_out, queue_close, queue_create
 
 bot = telebot.TeleBot(token[0])
 
+db_queue = Path("..") / "databases" / "queueBot_db.pickle"
 queues = 1  # Counts queues
 # Saves the id of the queue message with a specific subgroup
 msgs_id = {}
@@ -25,13 +28,13 @@ def queue_redirect(call, flag='cr'):
     :param call: different information from telebot about the chat
     :param flag: char means where to redirect the function call
     """
-    global queues
+    global queues, db_queue
 
     # Checks out whether it is a pyTelegramBotAPI type CallbackQuery or just a dict
     # Handling to the information between those 2 types is not the same
     id_chat = call.message.chat.id if type(call) == CallbackQuery else call.chat.id
     call_id = call.id
-    queue_data = db_reader('queueBot_db.pickle')
+    queue_data = db_reader(db_queue)
     user_data = get_user_name(call)
 
     user_name, sb = user_data
@@ -63,10 +66,10 @@ def start_command(message):
 
 @bot.message_handler(content_types=['text'])
 def main(message):
-    global queues
+    global queues, db_queue
 
     user_name, sb = get_user_name(message)  # Gets an username
-    queue_data = db_reader('queueBot_db.pickle')
+    queue_data = db_reader(db_queue)
     # Checks out whether there are queues of both subgroups
     queue_subgroup_1 = queue_subgroup_2 = {}
     if 1 in queue_data:

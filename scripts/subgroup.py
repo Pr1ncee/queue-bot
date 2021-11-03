@@ -1,3 +1,5 @@
+from pathlib import Path
+
 from db import db_users_writer, db_reader
 from username import get_user_name
 
@@ -16,7 +18,7 @@ def is_subgroup_chosen(username):
     The function checks out whether a subgroup is chosen
     And returns the appropriate value
     """
-    db_filename = 'users.pickle'
+    db_filename = Path("..") / "databases"/ "users.pickle"
     user_data = db_reader(db_filename)
     try:
         sb = user_data[username]['subgroup']

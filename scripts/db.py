@@ -1,8 +1,13 @@
+from pathlib import Path
 import pickle
 
 
+db_users = Path("..") / "databases"/ "users.pickle"
+db_queue = Path("..") / "databases" / "queueBot_db.pickle"
+
+
 def db_users_writer(username, subgroup_num=None,
-                    db_filename='users.pickle'):
+                    db_filename=db_users):
     """
     Saves the information about a user
     Or updates the database with a new subgroup
@@ -17,7 +22,7 @@ def db_users_writer(username, subgroup_num=None,
         pickle.dump(data, db_)
 
 
-def db_queue_writer(user, sb, db_filename='queueBot_db.pickle'):
+def db_queue_writer(user, sb, db_filename=db_queue):
     """
     Creates a specific queue if it isn't
     And pushes a user into the queue
@@ -42,7 +47,7 @@ def db_queue_deleter(subgroup):
     """
     Deletes the created queue
     """
-    db_filename = 'queueBot_db.pickle'
+    db_filename = db_queue
 
     data = db_reader(db_filename)
     data.pop(subgroup)
@@ -55,7 +60,7 @@ def db_queue_out(username, subgroup):
     """
     Pulls a user out of the queue
     """
-    db_filename = 'queueBot_db.pickle'
+    db_filename = db_queue
 
     data = db_reader(db_filename)
     data[subgroup].pop(username)
@@ -64,7 +69,7 @@ def db_queue_out(username, subgroup):
         pickle.dump(data, db)
 
 
-def db_reader(db_filename='users.pickle'):
+def db_reader(db_filename=db_users):
     """
     Returns the user's dict or the queue's dict
     """
@@ -81,7 +86,7 @@ def is_queue_created(subgroup):
     """
     Checks out whether the queue is created and returns the appropriate value
     """
-    db_filename = 'queueBot_db.pickle'
+    db_filename = db_queue
 
     data = db_reader(db_filename)
     try:
@@ -93,8 +98,8 @@ def is_queue_created(subgroup):
 
 
 def db_del():
-    data = db_reader('queueBot_db.pickle')
-    with open('queueBot_db.pickle', 'wb') as db:
+    data = db_reader(db_queue)
+    with open(db_queue, 'wb') as db:
         data.clear()
         pickle.dump(data, db)
 
