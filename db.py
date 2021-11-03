@@ -17,23 +17,25 @@ def db_users_writer(username, subgroup_num=None,
         pickle.dump(data, db_)
 
 
-def db_queue_writer(user, db_filename='queueBot_db.pickle'):
+def db_queue_writer(user, sb, db_filename='queueBot_db.pickle'):
     """
     Creates a specific queue if it isn't
     And pushes a user into the queue
     """
-    user_data = db_reader()
     queue_data = db_reader(db_filename)
-    user_subgroup = user_data[user]['subgroup']
 
     with open(db_filename, 'wb') as db:
-        if user not in queue_data:
-            data_for_recording = {user_subgroup: {user: user_data[user]}}
+        if sb not in queue_data:
+            data_for_recording = {sb: {}}
             queue_data.update(data_for_recording)
-
-            pickle.dump(queue_data, db)
         else:
-            pass
+            if user not in queue_data:
+                queue_data[sb] = {user: {'subgroup': sb}}
+
+            else:
+                pass
+
+        pickle.dump(queue_data, db)
 
 
 def db_queue_deleter(subgroup):
@@ -95,3 +97,7 @@ def db_del():
     with open('queueBot_db.pickle', 'wb') as db:
         data.clear()
         pickle.dump(data, db)
+
+
+if __name__ == '__main__':
+    db_del()
