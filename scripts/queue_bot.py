@@ -1,5 +1,10 @@
-# TODO: The message with a queue must be sent to every user in a subgroup!
-# TODO: To make queue counter work properly!
+"""
+The main module.
+Initialization of Telegram Bot connection.
+Two functions to interact with pyTelegramBotAPI.
+And the function that redirects all calls directed at operations with queues.
+"""
+
 from pathlib import Path
 
 import telebot
@@ -16,18 +21,19 @@ from queue_methods import queue_in, queue_out, queue_close, queue_create
 bot = telebot.TeleBot(token[0])
 
 db_queue = Path("..") / "databases" / "queueBot_db.pickle"
-queues = 1  # Counts queues
-# Saves the id of the queue message with a specific subgroup
-msgs_id = {}
+queues = 0  # Counts queues
+msgs_id = {}  # Saves the id of the queue message with a specific subgroup
 
 
 def queue_redirect(call, flag='cr'):
+    # TODO: The message with a queue must be sent to every user in a subgroup!e
     """
     Redirects to the appropriate specific function according to the flag.
 
     :param call: different information from telebot about the chat
     :param flag: char means where to redirect the function call
     """
+
     global queues, db_queue
 
     # Checks out whether it is a pyTelegramBotAPI type CallbackQuery or just a dict
@@ -38,25 +44,30 @@ def queue_redirect(call, flag='cr'):
     user_data = get_user_name(call)
 
     user_name, sb = user_data
-    queue_caption = f"Queue {queues} \nSubgroup {sb}"
+    queue_caption = "Queue {0} \nSubgroup {1}"
 
     if flag == 'cr':
         if queues < 3:
-            id_ = queue_create(bot, user_name, sb, id_chat, queue_caption)
-            if id_[sb]:
+            if not is_queue_created(sb):
                 queues += 1
+                id_ = queue_create(bot, user_name, sb, id_chat, queue_caption.format(queues, sb))
                 msgs_id[sb] = id_[sb]
+            else:
+                bot.send_message(id_chat, f"The queue with the subgroup {sb} already exists!")
         else:
             bot.send_message(id_chat, "There are no more queues to be created!")
     elif flag == 'in':
-        queue_in(bot, user_name, sb, id_chat, queue_caption, call_id, queue_data, msgs_id[sb])
+        queue_in(bot, user_name, sb, id_chat, queue_caption.format(queues, sb), call_id, queue_data, msgs_id[sb])
     elif flag == 'out':
-        queue_out(bot, user_name, sb, id_chat, queue_caption, msgs_id[sb])
+        queue_out(bot, user_name, sb, id_chat, queue_caption.format(queues, sb), msgs_id[sb])
     elif flag == 'cl':
-        id_ = queue_close(bot, sb, id_chat, call_id, msgs_id[sb], call.message.text)
-        if id_:
+        queue_sb = int(call.message.text[18])  # Gets a queue subgroup from the sent message
+        if queue_sb == sb:
             queues -= 1
+            id_ = queue_close(bot, sb, id_chat, call_id, msgs_id[sb])
             msgs_id[sb] = id_[sb]
+        else:
+            bot.send_message(id_chat, "You can only close queues of your subgroup!")
 
 
 @bot.message_handler(commands=['start'])
@@ -66,7 +77,7 @@ def start_command(message):
 
 @bot.message_handler(content_types=['text'])
 def main(message):
-    global queues, db_queue
+    global db_queue
 
     user_name, sb = get_user_name(message)  # Gets an username
     queue_data = db_reader(db_queue)

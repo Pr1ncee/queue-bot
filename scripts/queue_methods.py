@@ -1,10 +1,12 @@
+"""This module combines several functions that make operations with queues."""
+
 from pathlib import Path
 
-from db import db_reader, db_queue_writer, db_queue_deleter, db_queue_out, is_queue_created
+from db import db_reader, db_queue_writer, db_queue_deleter, db_queue_out
 from keyboards import inline_keyboard
 
 
-def queue_create(bot_obj, user_name, sb, id_chat, queue_caption):
+def queue_create(bot_obj, user_name, sb, id_chat, queue_caption,):
     """
     Creates a queue if it isn't yet, or send the appropriate message.
 
@@ -15,14 +17,12 @@ def queue_create(bot_obj, user_name, sb, id_chat, queue_caption):
     :param queue_caption: the caption of queue message
     :return: if an queue is not created yet, it returns the dictionary with id of queue message
     """
-    msg_id = {}
-    if not is_queue_created(sb):
-        db_queue_writer(user_name, sb)
 
-        sent_msg = bot_obj.send_message(id_chat, queue_caption, reply_markup=inline_keyboard())
-        msg_id[sb] = sent_msg.message_id
-    else:
-        bot_obj.send_message(id_chat, f"The queue with the subgroup {sb} already exists!")
+    db_queue_writer(user_name, sb)
+
+    msg_id = {}
+    sent_msg = bot_obj.send_message(id_chat, queue_caption, reply_markup=inline_keyboard())
+    msg_id[sb] = sent_msg.message_id
 
     return msg_id
 
@@ -40,6 +40,7 @@ def queue_in(bot_obj, user_name, sb, id_chat, queue_caption, call_id, queue_data
     :param queue_data: information about existing queues
     :param msg_id: id of queue message
     """
+
     if user_name not in queue_data[sb]:
         db_queue_writer(user_name, sb)
         join_queue(bot_obj, sb, id_chat, msg_id, queue_caption)
@@ -58,6 +59,7 @@ def queue_out(bot_obj, user_name, sb, id_chat, queue_caption, msg_id):
     :param queue_caption: the caption of queue message
     :param msg_id: id of queue message
     """
+
     try:
         db_queue_out(user_name, sb)
     except KeyError:
@@ -66,7 +68,7 @@ def queue_out(bot_obj, user_name, sb, id_chat, queue_caption, msg_id):
         join_queue(bot_obj, sb, id_chat, msg_id, queue_caption)
 
 
-def queue_close(bot_obj, sb, id_chat, call_id, msg_id, message_text):
+def queue_close(bot_obj, sb, id_chat, call_id, msg_id):
     """
     Queue closing is only available for a user with the same subgroup of a queue.
     If subgroups don't match the function send the appropriate message.
@@ -76,18 +78,14 @@ def queue_close(bot_obj, sb, id_chat, call_id, msg_id, message_text):
     :param id_chat: chat id where bot is connected to
     :param call_id: id of callback query
     :param msg_id: id of queue message
-    :param message_text: message text for extracting subgroup
     :return: returns the dictionary with nullified id of subgroup's queue message
     """
-    queue_sb = int(message_text[18])  # Gets a queue subgroup from the sent message
+
     msg__id = {}
-    if queue_sb == sb:
-        db_queue_deleter(sb)
-        bot_obj.answer_callback_query(call_id, "The queue has been closed")
-        bot_obj.delete_message(id_chat, msg_id)
-        msg__id[sb] = None
-    else:
-        bot_obj.send_message(id_chat, "You can only close queues of your subgroup!")
+    db_queue_deleter(sb)
+    bot_obj.answer_callback_query(call_id, "The queue has been closed")
+    bot_obj.delete_message(id_chat, msg_id)
+    msg__id[sb] = None
 
     return msg__id
 
@@ -102,6 +100,7 @@ def join_queue(bot_obj, sb, id_chat, msg_id, queue_caption):
     :param msg_id: id of queue message
     :param queue_caption: the caption of queue message
     """
+
     db_filename = Path("..") / "databases" / "queueBot_db.pickle"
     queue_data = db_reader(db_filename)
     queue_list = queue_list_creator(queue_data[sb])  # The list with users in queue
@@ -117,6 +116,7 @@ def queue_list_creator(queue_data_sb):
     :param queue_data_sb: information about existing queues in specific subgroup
     :return: returns users in a queue
     """
+
     queue_list = []
     try:
         for index, user in enumerate(queue_data_sb):

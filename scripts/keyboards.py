@@ -1,3 +1,8 @@
+"""
+This module includes two functions that add different keyboards to the bot.
+All keyboards are built-in in pyTelegramBotAPI.
+"""
+
 from telebot.types import InlineKeyboardButton, InlineKeyboardMarkup,\
                           ReplyKeyboardMarkup, KeyboardButton
 

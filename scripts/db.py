@@ -1,8 +1,10 @@
+"""The module is all about modifying the databases."""
+
 from pathlib import Path
 import pickle
 
 
-db_users = Path("..") / "databases"/ "users.pickle"
+db_users = Path("..") / "databases" / "users.pickle"
 db_queue = Path("..") / "databases" / "queueBot_db.pickle"
 
 
@@ -12,6 +14,7 @@ def db_users_writer(username, subgroup_num=None,
     Saves the information about a user
     Or updates the database with a new subgroup
     """
+
     data = db_reader(db_filename)
     with open(db_filename, 'wb') as db_:
         if username not in data:
@@ -27,6 +30,7 @@ def db_queue_writer(user, sb, db_filename=db_queue):
     Creates a specific queue if it isn't
     And pushes a user into the queue
     """
+
     queue_data = db_reader(db_filename)
 
     with open(db_filename, 'wb') as db:
@@ -47,6 +51,7 @@ def db_queue_deleter(subgroup):
     """
     Deletes the created queue
     """
+
     db_filename = db_queue
 
     data = db_reader(db_filename)
@@ -60,6 +65,7 @@ def db_queue_out(username, subgroup):
     """
     Pulls a user out of the queue
     """
+
     db_filename = db_queue
 
     data = db_reader(db_filename)
@@ -73,6 +79,7 @@ def db_reader(db_filename=db_users):
     """
     Returns the user's dict or the queue's dict
     """
+
     try:
         with open(db_filename, 'rb') as db:
             data = pickle.load(db)
@@ -86,6 +93,7 @@ def is_queue_created(subgroup):
     """
     Checks out whether the queue is created and returns the appropriate value
     """
+
     db_filename = db_queue
 
     data = db_reader(db_filename)

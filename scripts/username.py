@@ -1,3 +1,5 @@
+"""This file consists of the only function that gets username and subgroup of user. """
+
 from db import db_reader
 
 
@@ -6,11 +8,12 @@ def get_user_name(call):
     Returns the username from the call
     And subgroup if it's chosen
     """
+
     users_db = db_reader()
 
     first_name = call.from_user.first_name
     last_name = call.from_user.last_name
-    if not last_name:
+    if not last_name:  # User may not have last name
         username = first_name
     else:
         username = ' '.join([first_name, last_name])
