@@ -1,6 +1,6 @@
 """The module includes two functions that operate with subgroups."""
 
-from pathlib import Path
+from paths import db_users
 
 from db import db_users_writer, db_reader
 from username import get_user_name
@@ -12,7 +12,6 @@ def subgroup(message, subgroup_num):
     """
 
     username = get_user_name(message)[0]
-
     db_users_writer(username, subgroup_num)
 
 
@@ -22,8 +21,8 @@ def is_subgroup_chosen(username):
     And returns the appropriate value
     """
 
-    db_filename = Path("..") / "databases" / "users.pickle"
-    user_data = db_reader(db_filename)
+    user_data = db_reader(db_users)
+
     try:
         sb = user_data[username]['subgroup']
     except KeyError:

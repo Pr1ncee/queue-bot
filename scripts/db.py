@@ -1,14 +1,10 @@
 """The module is all about modifying the databases."""
 
-from pathlib import Path
+from paths import db_queue, db_users
 import pickle
 
 
-db_users = Path("..") / "databases" / "users.pickle"
-db_queue = Path("..") / "databases" / "queueBot_db.pickle"
-
-
-def db_users_writer(username, subgroup_num=None,
+def db_users_writer(username, subgroup_num=None, msg_id=None, chat_id=None,
                     db_filename=db_users):
     """
     Saves the information about a user
@@ -18,14 +14,18 @@ def db_users_writer(username, subgroup_num=None,
     data = db_reader(db_filename)
     with open(db_filename, 'wb') as db_:
         if username not in data:
-            data.update({username: {'subgroup': subgroup_num}})
+            data.update({username: {'subgroup': subgroup_num, 'chat_id': chat_id, 'msg_id': msg_id}})
         elif subgroup_num:
             data[username].update({'subgroup': subgroup_num})
+        elif msg_id:
+            data[username].update({'msg_id': msg_id})
+        elif chat_id:
+            data[username].update({'chat_id': chat_id})
 
         pickle.dump(data, db_)
 
 
-def db_queue_writer(user, sb, db_filename=db_queue):
+def db_queue_writer(sb, user_name=None, db_filename=db_queue):
     """
     Creates a specific queue if it isn't
     And pushes a user into the queue
@@ -34,31 +34,32 @@ def db_queue_writer(user, sb, db_filename=db_queue):
     queue_data = db_reader(db_filename)
 
     with open(db_filename, 'wb') as db:
-        if sb not in queue_data:
+        if user_name:
+            users_data = db_reader(db_users)[user_name]
+            queue_data[sb].update({user_name: users_data})
+        else:
             data_for_recording = {sb: {}}
             queue_data.update(data_for_recording)
-        else:
-            if user not in queue_data:
-                queue_data[sb] = {user: {'subgroup': sb}}
-
-            else:
-                pass
 
         pickle.dump(queue_data, db)
 
 
 def db_queue_deleter(subgroup):
     """
-    Deletes the created queue
+    Deletes a created queue
     """
 
-    db_filename = db_queue
+    queue_data = db_reader(db_queue)
+    users_data = db_reader(db_users)
 
-    data = db_reader(db_filename)
-    data.pop(subgroup)
+    for user in queue_data[subgroup]:
+        users_data[user].update({'msg_id': None})
+    queue_data.pop(subgroup)
 
-    with open(db_filename, 'wb') as db:
-        pickle.dump(data, db)
+    with open(db_users, 'wb') as db_u:
+        pickle.dump(users_data, db_u)
+    with open(db_queue, 'wb') as db_q:
+        pickle.dump(queue_data, db_q)
 
 
 def db_queue_out(username, subgroup):
@@ -66,13 +67,11 @@ def db_queue_out(username, subgroup):
     Pulls a user out of the queue
     """
 
-    db_filename = db_queue
+    queue_data = db_reader(db_queue)
 
-    data = db_reader(db_filename)
-    data[subgroup].pop(username)
-
-    with open(db_filename, 'wb') as db:
-        pickle.dump(data, db)
+    queue_data[subgroup].pop(username)
+    with open(db_queue, 'wb') as db_q:
+        pickle.dump(queue_data, db_q)
 
 
 def db_reader(db_filename=db_users):
@@ -94,9 +93,8 @@ def is_queue_created(subgroup):
     Checks out whether the queue is created and returns the appropriate value
     """
 
-    db_filename = db_queue
+    data = db_reader(db_queue)
 
-    data = db_reader(db_filename)
     try:
         data[subgroup]
     except KeyError:
@@ -110,6 +108,10 @@ def db_del():
     with open(db_queue, 'wb') as db:
         data.clear()
         pickle.dump(data, db)
+    #d = db_reader(db_users)
+    #with open(db_users, 'wb')as db:
+        #d.clear()
+        #pickle.dump(d, db)
 
 
 if __name__ == '__main__':
