@@ -17,7 +17,6 @@ qbs = QueueBotService
 qbs.bot = bot
 
 
-# TODO Implement the queue message output
 @bot.message_handler(commands=['start'])
 def start(message: Message) -> None:
     """
@@ -30,7 +29,8 @@ def start(message: Message) -> None:
         PostgresDBClient.truncate_table()
         qbs._chat_id = chat_id
         qbs.is_queue_started = False
-        qbs.start_queue(chat_id, message.from_user.username)
+        username = qbs.get_initials(message)
+        qbs.start_queue(chat_id, username)
         logger.info('The queue has been started')
         return
 
@@ -70,7 +70,7 @@ def callback_query(call: CallbackQuery) -> None:
     """
     Handling info from inline keyboard.
     """
-    username, chat_id = call.from_user.username, call.message.chat.id
+    username = qbs.get_initials(call)
     try:
         match call.data:
             case 'in':

@@ -115,6 +115,16 @@ class QueueBotService:
         cls.send_queue()
 
     @staticmethod
+    def get_initials(request):
+        username = request.from_user.username
+        if not username:
+            first_name = request.from_user.first_name
+            last_name = request.from_user.last_name
+            user = f'{first_name} {last_name}' if last_name else first_name
+            return user
+        return username
+
+    @staticmethod
     def inline_keyboard():
         keyboard = [
             [InlineKeyboardButton('In', callback_data='in')],
