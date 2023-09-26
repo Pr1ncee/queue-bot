@@ -1,1 +1,11 @@
 config.py
+
+.idea/
+
+celery_data/
+
+.pytest_cache/
+
+src/celerybeat-schedule
+
+.env

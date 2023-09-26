@@ -1,0 +1,17 @@
+[[source]]
+url = "https://pypi.org/simple"
+verify_ssl = true
+name = "pypi"
+
+[packages]
+pytelegrambotapi = "4.13.0"
+python-dotenv = "1.0.0"
+httpx = "==0.25.0"
+pytest = "==5.4.2"
+redis = {version = "==5.0.0", extras = ["hiredis"]}
+celery = "==5.3.4"
+
+[dev-packages]
+
+[requires]
+python_version = "3.11"
