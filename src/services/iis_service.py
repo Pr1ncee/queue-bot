@@ -10,6 +10,8 @@ class IISService:
     def get_current_week(cls) -> int:
         with httpx.Client() as client:
             response = client.get(general_config.BASE_IIS_URL + "/current-week")
+            if response.status_code != 200:
+                return 0
             content = response.content
             return int(content)
 
@@ -17,6 +19,8 @@ class IISService:
     def get_schedule(cls, group: int) -> dict:
         with httpx.Client() as client:
             response = client.get(general_config.BASE_IIS_URL + f"?studentGroup={group}")
+            if response.status_code != 200:
+                return {}
             content = response.content
             return json.loads(content)
 
@@ -25,7 +29,10 @@ class IISService:
         full = IISService.get_schedule(group=group)
         week = IISService.get_current_week()
 
-        schedules = full["schedules"]
+        schedules = full.get("schedules", {})
+        if not schedules:
+            return []
+
         today_day = DayOfWeekEnum.get_today_day()
 
         lessons = [lesson for lesson in schedules[f"{today_day}"] if week in lesson['weekNumber']]

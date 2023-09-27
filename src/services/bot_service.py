@@ -1,10 +1,10 @@
-from celery.result import AsyncResult
+from datetime import datetime, timedelta
+
 from telebot.types import CallbackQuery
 
-from celery_app import app
+from celery_tasks.tasks import get_today_schedule
 from db.redis_client import RedisClient
 from enums.response_enum import ResponseEnum
-from settings.config import celery_config
 from utils.get_username_from_callback import get_username
 from utils.get_queue_name_from_callback import get_queue_name
 
@@ -53,13 +53,11 @@ class BotService:
         RedisClient.clear_db()
 
     @classmethod
-    def get_today_schedule(cls):
-        result = AsyncResult(celery_config.TASK_NAME, app=app)
-        if result.ready():
-            schedule = result.result
-            list_msg = cls.create_queues(schedule=schedule)
-            return list_msg
-        return []
+    def get_today_schedule_and_create_queues(cls):
+        schedule = get_today_schedule.apply_async(args=(121701,), eta=datetime.now() + timedelta(hours=24))
+
+        classes = BotService.create_queues(schedule=schedule.get())
+        return classes
 
     @classmethod
     def create_queues(cls, schedule) -> list[str]:

@@ -16,9 +16,12 @@ def start_command(message):
     general_config.CHAT_ID = message.chat.id
 
     while True:
-        queues = BotService.get_today_schedule()
-        for queue in queues:
-            bot.send_message(chat_id=general_config.CHAT_ID, text=queue, reply_markup=inline_keyboard())
+        classes = BotService.get_today_schedule_and_create_queues()
+        while not classes:
+            continue
+
+        for cl in classes:
+            bot.send_message(chat_id=general_config.CHAT_ID, text=cl, reply_markup=inline_keyboard())
 
 
 @bot.message_handler(commands=['clear'])

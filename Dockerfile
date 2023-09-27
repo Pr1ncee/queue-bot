@@ -17,9 +17,3 @@ COPY ./scripts/start_celery_worker.sh /scripts/start_celery_worker.sh
 RUN chmod +x /scripts/start_celery_worker.sh
 
 CMD "/scripts/start_celery_worker.sh"
-
-FROM base AS celery_beat
-COPY ./scripts/start_celery_beat.sh /scripts/start_celery_beat.sh
-RUN chmod +x /scripts/start_celery_beat.sh
-
-CMD "/scripts/start_celery_beat.sh"
