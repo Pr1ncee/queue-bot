@@ -10,8 +10,6 @@ from utils.get_queue_name_from_callback import get_queue_name
 
 
 class BotService:
-    queue_caption = "Queue {0}"
-
     @classmethod
     def join_queue(cls, call: CallbackQuery) -> dict[str, str]:
         username = get_username(call=call)
