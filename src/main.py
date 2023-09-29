@@ -1,10 +1,12 @@
+from datetime import timedelta
+
 import telebot
 
 from src.enums.response_enum import ResponseEnum
 from src.keyboards.inline_keyboard import inline_keyboard
 from src.services.bot_service import BotService
 from src.enums.callback_enum import CallbackEnum
-from src.settings.config import general_config
+from src.settings.config import general_config, celery_config
 
 bot = telebot.TeleBot(general_config.TOKEN)
 
@@ -28,14 +30,24 @@ def start_command(message):
         bot.send_message(chat_id=message.chat.id, text="Запускаем бота... ")
         bot.send_message(chat_id=message.chat.id, text="Скачиваем расписание... ")
 
+        response = BotService.get_today_schedule_and_create_queues(
+            bot=bot,
+            chat_id=chat_id,
+            group=group,
+            delay=timedelta(seconds=0)
+        )
+        if response is False:
+            return
         while True:
-            response = BotService.get_today_schedule_and_create_queues(group=group)
-            if response["status"] == ResponseEnum.FATAL:
-                bot.send_message(chat_id=chat_id, text=response["message"])
+            BotService.delete_outdated_resources(bot=bot, chat_id=chat_id)
+            response = BotService.get_today_schedule_and_create_queues(
+                bot=bot,
+                chat_id=chat_id,
+                group=group,
+                delay=timedelta(hours=celery_config.TASK_RETRY_EVERY_HOURS)
+            )
+            if response is False:
                 return
-
-            for cl in response["classes"]:
-                bot.send_message(chat_id=chat_id, text=cl, reply_markup=inline_keyboard())
 
 
 @bot.message_handler(commands=['clear'])
@@ -56,7 +68,7 @@ def callback_query(call):
                 message_id=message_id,
                 reply_markup=inline_keyboard(),
             )
-            bot.answer_callback_query(call.id, "You have been added to the queue")
+            bot.answer_callback_query(call.id, "Вы добавлены в очередь!")
         elif msg["status"] == ResponseEnum.FAILED.value:
             bot.answer_callback_query(call.id, msg["msg"])
     elif call.data == CallbackEnum.LEAVE_QUEUE.value:
@@ -68,13 +80,13 @@ def callback_query(call):
                 message_id=message_id,
                 reply_markup=inline_keyboard(),
             )
-            bot.answer_callback_query(call.id, "You have been removed from the queue")
+            bot.answer_callback_query(call.id, "Вы удалены из очереди!")
         elif msg["status"] == ResponseEnum.FAILED.value:
             bot.answer_callback_query(call.id, msg["msg"])
     elif call.data == CallbackEnum.CLOSE_QUEUE.value and call.from_user.username == "Andrey_Strongin":
         BotService.close_queue(call=call)
         bot.delete_message(chat_id=chat_id, message_id=message_id)
-        bot.answer_callback_query(call.id, "The queue has been closed")
+        bot.answer_callback_query(call.id, "Очередь закрылась!")
 
 
 bot.polling(timeout=60)

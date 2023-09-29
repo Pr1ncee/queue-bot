@@ -11,9 +11,13 @@ class TestRedisDB:
         assert is_connected is True
 
     def test_join_queue(self, db_session, test_username):
-        response = RedisClient.join_queue(queue_name=redis_config.TEST_QUEUE_NAME, username=test_username)
+        username, full_queue_name = RedisClient.join_queue(
+            queue_name=redis_config.TEST_QUEUE_NAME,
+            username=test_username
+        )
 
-        assert response == test_username
+        assert username == test_username
+        assert full_queue_name == redis_config.TEST_QUEUE_NAME
         assert RedisClient.get_queue_len(queue_name=redis_config.TEST_QUEUE_NAME) == 1
         assert RedisClient.get_from_queue(queue_name=redis_config.TEST_QUEUE_NAME) == test_username
 
