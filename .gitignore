@@ -5,6 +5,7 @@ config.py
 celery_data/
 
 .pytest_cache/
+__pycache__/
 
 src/celerybeat-schedule
 
