@@ -11,17 +11,31 @@ bot = telebot.TeleBot(general_config.TOKEN)
 
 @bot.message_handler(commands=['start'])
 def start_command(message):
-    bot.send_message(chat_id=message.chat.id, text="Запускаем бота... ")
-    bot.send_message(chat_id=message.chat.id, text="Скачиваем расписание... ")
-    general_config.CHAT_ID = message.chat.id
+    """
+    Entrypoint for starting the bot.
+    Example of valid /start command:
+    '/start 121701'
 
-    while True:
-        classes = BotService.get_today_schedule_and_create_queues()
-        while not classes:
-            continue
+    :param message: command to start the bot
+    """
+    chat_id = message.chat.id
 
-        for cl in classes:
-            bot.send_message(chat_id=general_config.CHAT_ID, text=cl, reply_markup=inline_keyboard())
+    try:
+        group = int(message.text.split(" ")[-1])
+    except ValueError:
+        bot.send_message(chat_id=general_config.CHAT_ID, text="Введите действительную группу!")
+    else:
+        bot.send_message(chat_id=message.chat.id, text="Запускаем бота... ")
+        bot.send_message(chat_id=message.chat.id, text="Скачиваем расписание... ")
+
+        while True:
+            response = BotService.get_today_schedule_and_create_queues(group=group)
+            if response["status"] == ResponseEnum.FATAL:
+                bot.send_message(chat_id=chat_id, text=response["message"])
+                return
+
+            for cl in response["classes"]:
+                bot.send_message(chat_id=chat_id, text=cl, reply_markup=inline_keyboard())
 
 
 @bot.message_handler(commands=['clear'])

@@ -1,10 +1,13 @@
-from datetime import datetime, timedelta
+from datetime import timedelta, datetime
 
+from celery.utils.serialization import UnpickleableExceptionWrapper
 from telebot.types import CallbackQuery
 
 from celery_tasks.tasks import get_today_schedule
 from db.redis_client import RedisClient
 from enums.response_enum import ResponseEnum
+from exceptions.exceptions import FatalError
+from settings.config import celery_config
 from utils.get_username_from_callback import get_username
 from utils.get_queue_name_from_callback import get_queue_name
 
@@ -51,11 +54,20 @@ class BotService:
         RedisClient.clear_db()
 
     @classmethod
-    def get_today_schedule_and_create_queues(cls):
-        schedule = get_today_schedule.apply_async(args=(121701,), eta=datetime.now() + timedelta(hours=24))
+    def get_today_schedule_and_create_queues(
+            cls,
+            group: int,
+    ) -> dict[str, str, list]:
+        try:
+            schedule = get_today_schedule.apply_async(
+                args=(group,),
+                eta=datetime.now() + timedelta(seconds=celery_config.TASK_RETRY_EVERY_HOURS)
+            )
+        except (FatalError, UnpickleableExceptionWrapper) as exc:
+            return {"status": ResponseEnum.FATAL,  "classes": [], "message": exc}
 
         classes = BotService.create_queues(schedule=schedule.get())
-        return classes
+        return {"status": ResponseEnum.SUCCESS, "classes": classes, "message": ""}
 
     @classmethod
     def create_queues(cls, schedule) -> list[str]:
