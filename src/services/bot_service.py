@@ -37,7 +37,7 @@ class BotService:
 
             msg = cls.update_queue(queue_name=queue_name, msg_id=call.message.id)
             return {"status": ResponseEnum.SUCCESS.value, "msg": msg}
-        return {"status": ResponseEnum.FAILED.value, "msg": "You are already in the queue!"}
+        return {"status": ResponseEnum.FAILED.value, "msg": "Вы уже встали в эту очередь!"}
 
     @classmethod
     def leave_queue(cls, call: CallbackQuery) -> dict[str, str]:
@@ -48,7 +48,7 @@ class BotService:
 
             msg = cls.update_queue(queue_name=queue_name, msg_id=call.message.id)
             return {"status": ResponseEnum.SUCCESS.value, "msg": msg}
-        return {"status": ResponseEnum.FAILED.value, "msg": "You are not in the queue!"}
+        return {"status": ResponseEnum.FAILED.value, "msg": "Вы не находитесь в этой очереди!"}
 
     @classmethod
     def close_queue(cls, call: CallbackQuery) -> None:
