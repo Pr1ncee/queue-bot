@@ -22,6 +22,11 @@ def start_command(message):
     """
     chat_id = message.chat.id
 
+    active_chats = BotService.list_active_chats()
+    if str(chat_id) in active_chats:
+        return
+    BotService.add_active_chat(chat_id=chat_id)
+
     try:
         group = int(message.text.split(" ")[-1])
     except ValueError:

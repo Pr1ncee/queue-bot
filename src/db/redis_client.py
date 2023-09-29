@@ -89,6 +89,15 @@ class RedisClient:
         return queue_ids
 
     @classmethod
+    def add_active_chat(cls, chat_id: int) -> None:
+        client.rpush(redis_config.ACTIVE_CHATS_LIST, chat_id)
+
+    @classmethod
+    def list_active_chats(cls) -> list[str]:
+        queue = client.lrange(redis_config.ACTIVE_CHATS_LIST, 0, -1)
+        return queue
+
+    @classmethod
     def clear_db(cls) -> None:
         client.flushall()
 

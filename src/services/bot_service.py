@@ -103,3 +103,11 @@ class BotService:
 
         for msg_id in queue_ids:
             bot.delete_message(chat_id=chat_id, message_id=msg_id)
+
+    @classmethod
+    def add_active_chat(cls, chat_id: int) -> None:
+        RedisClient.add_active_chat(chat_id=chat_id)
+
+    @classmethod
+    def list_active_chats(cls) -> list[str]:
+        return RedisClient.list_active_chats()

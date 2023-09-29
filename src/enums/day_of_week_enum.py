@@ -1,6 +1,8 @@
+import pytz
 from datetime import datetime
 
 from enums.base_enum import BaseEnum
+from settings.config import general_config
 
 
 class DayOfWeekEnum(BaseEnum):
@@ -17,5 +19,5 @@ class DayOfWeekEnum(BaseEnum):
 
     @staticmethod
     def get_today_day():
-        current_day = datetime.today().weekday()
+        current_day = datetime.now(pytz.timezone(general_config.TIMEZONE)).weekday()
         return DayOfWeekEnum(current_day)

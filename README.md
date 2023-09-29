@@ -34,7 +34,7 @@ To run the bot, follow these steps:
 3. Run the following command in your terminal:
 
     ```shell
-    docker compose up
+    docker compose up --build
     ```
 4. To run tests, use the following command:
 
