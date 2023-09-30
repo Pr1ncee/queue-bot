@@ -2,7 +2,7 @@ import re
 
 import redis
 
-from settings.config import redis_config
+from src.settings.config import redis_config
 
 client = redis.Redis(
     host=redis_config.HOST,
