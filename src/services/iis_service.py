@@ -35,6 +35,8 @@ class IISService:
             return []
 
         today_day = DayOfWeekEnum.get_today_day()
+        if today_day.__str__() == "Воскресенье":
+            return []
 
         lessons = [lesson for lesson in schedules[f"{today_day}"] if week in lesson['weekNumber']]
         return lessons

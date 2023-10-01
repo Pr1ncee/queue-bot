@@ -19,7 +19,7 @@ class RedisConfig:
 class CeleryConfig:
     CELERY_BROKER_URL = os.getenv("CELERY_BROKER_URL", "")
     CELERY_RESULT_BACKEND = os.getenv("CELERY_RESULT_BACKEND", "")
-    TASK_RETRY_EVERY_HOURS = 24
+    TASK_REPEAT_EVERY_HOURS = int(os.getenv("CELERY_TASK_REPEAT_EVERY_HOURS", "24"))
     TASK_MAX_RETRY = 100
     TASK_RETRY_DELAY = 60  # Seconds
 

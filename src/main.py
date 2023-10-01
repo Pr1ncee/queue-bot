@@ -49,7 +49,7 @@ def start_command(message):
                 bot=bot,
                 chat_id=chat_id,
                 group=group,
-                delay=timedelta(hours=celery_config.TASK_RETRY_EVERY_HOURS)
+                delay=timedelta(hours=celery_config.TASK_REPEAT_EVERY_HOURS)
             )
             if response is False:
                 return
