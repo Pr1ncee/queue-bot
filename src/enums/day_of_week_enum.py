@@ -13,6 +13,7 @@ class DayOfWeekEnum(BaseEnum):
     FRIDAY = 4
     SATURDAY = 5
     SUNDAY = 6
+    DAY_OFF = "Воскресенье"
 
     def __str__(self):
         return ["Понедельник", "Вторник", "Среда", "Четверг", "Пятница", "Суббота", "Воскресенье"][self.value]

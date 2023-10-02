@@ -7,6 +7,8 @@ from settings.config import general_config
 
 
 class IISService:
+    DAY_OFF = "Воскресенье"
+
     @classmethod
     def get_current_week(cls) -> int:
         with httpx.Client() as client:
@@ -35,8 +37,8 @@ class IISService:
             return []
 
         today_day = DayOfWeekEnum.get_today_day()
-        if today_day.__str__() == "Воскресенье":
-            return []
+        if today_day.__str__() == cls.DAY_OFF:
+            return [cls.DAY_OFF]
 
         lessons = [lesson for lesson in schedules[f"{today_day}"] if week in lesson['weekNumber']]
         return lessons
