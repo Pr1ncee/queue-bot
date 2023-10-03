@@ -1,4 +1,4 @@
-FROM python:3.11.2-slim-buster AS base
+FROM python:3.11.2-slim-buster
 
 ENV PYTHONUNBUFFERED=1
 ENV PYTHONDONTWRITEBYTECODE 1
@@ -9,11 +9,4 @@ COPY . /app/
 
 RUN pip3 install pipenv && pipenv install --system --deploy --ignore-pipfile
 
-FROM base AS queue_bot
 CMD "/app/scripts/entrypoint.sh"
-
-FROM base AS celery_worker
-COPY ./scripts/start_celery_worker.sh /scripts/start_celery_worker.sh
-RUN chmod +x /scripts/start_celery_worker.sh
-
-CMD "/scripts/start_celery_worker.sh"

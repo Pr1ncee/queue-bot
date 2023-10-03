@@ -5,7 +5,7 @@ QueueBot is a Telegram bot for creating queues in group chats. It is written in 
 - Built with Python.
 - Uses the pyTelegramBotAPI library for Telegram integration.
 - Relies on Redis as a database.
-- Utilizes Celery for making requests to the IIS API.
+- Utilizes Schedule module for making requests to the IIS API.
 - Containerized using Docker.
 
 ## Prerequisites
