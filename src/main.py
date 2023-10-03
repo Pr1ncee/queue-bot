@@ -1,12 +1,14 @@
-from datetime import timedelta
+from datetime import datetime
 
+import pytz
 import telebot
+import schedule
 
 from src.enums.response_enum import ResponseEnum
 from src.keyboards.inline_keyboard import inline_keyboard
 from src.services.bot_service import BotService
 from src.enums.callback_enum import CallbackEnum
-from src.settings.config import general_config, celery_config
+from src.settings.config import general_config, task_config
 
 bot = telebot.TeleBot(general_config.TOKEN)
 
@@ -21,11 +23,11 @@ def start_command(message):
     :param message: command to start the bot
     """
     chat_id = message.chat.id
-
-    active_chats = BotService.list_active_chats()
-    if str(chat_id) in active_chats:
-        return
-    BotService.add_active_chat(chat_id=chat_id)
+    #
+    # active_chats = BotService.list_active_chats()
+    # if str(chat_id) in active_chats:
+    #     return
+    # BotService.add_active_chat(chat_id=chat_id)
 
     try:
         group = int(message.text.split(" ")[-1])
@@ -35,24 +37,27 @@ def start_command(message):
         bot.send_message(chat_id=message.chat.id, text="Запускаем бота... ")
         bot.send_message(chat_id=message.chat.id, text="Скачиваем расписание... ")
 
-        response = BotService.get_today_schedule_and_create_queues(
+        BotService.make_queues(
             bot=bot,
             chat_id=chat_id,
             group=group,
-            delay=timedelta(seconds=0)
         )
-        if response is False:
-            return
+
+        schedule.every().day.at(task_config.TASK_TIME_TO_REPEAT).do(
+            BotService.make_queues,
+            bot=bot,
+            group=group,
+            chat_id=chat_id,
+        )
         while True:
-            BotService.delete_outdated_resources(bot=bot, chat_id=chat_id)
-            response = BotService.get_today_schedule_and_create_queues(
-                bot=bot,
-                chat_id=chat_id,
-                group=group,
-                delay=timedelta(hours=celery_config.TASK_REPEAT_EVERY_HOURS)
-            )
-            if response is False:
-                return
+            schedule.run_pending()
+
+
+@bot.message_handler(commands=['ping'])
+def ping_command(message):
+    current_time = datetime.now(pytz.timezone(general_config.TIMEZONE))
+    msg = f"Текущая дата: {current_time}"
+    bot.send_message(chat_id=message.chat.id, text=msg)
 
 
 @bot.message_handler(commands=['clear'])
