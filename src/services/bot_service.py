@@ -3,6 +3,7 @@ from random import choices
 from httpx import ConnectError
 from retry import retry
 from telebot import TeleBot
+from telebot.apihelper import ApiTelegramException
 from telebot.types import CallbackQuery
 
 from db.redis_client import RedisClient
@@ -79,24 +80,26 @@ class BotService:
             chat_id: int,
             group: int,
     ) -> None | bool:
-        cls.delete_outdated_resources(bot=bot, chat_id=chat_id)
-
         try:
-            res_schedule = cls.get_today_schedule(group=group)
-        except (FatalError, ClientError, ServerError) as exc:
-            bot.send_message(chat_id=chat_id, text="Фатальная ошибка! Завершаем работу...")
-            raise FatalError(exc)
+            cls.delete_outdated_resources(bot=bot, chat_id=chat_id)
 
-        if res_schedule[0] == DayOfWeekEnum.DAY_OFF.value:
-            random_phrase = choices(DayOffPhrases.values(), weights=DayOffPhrases.get_weights(), k=1)[0]
-            if random_phrase is None:
-                return
-            bot.send_message(chat_id=chat_id, text=random_phrase)
-        else:
-            classes = BotService.create_text_queues(schedule=res_schedule)
-            classes = ["ОМИС"]
-            for cl in classes:
-                bot.send_message(chat_id=chat_id, text=cl, reply_markup=inline_keyboard())
+            try:
+                res_schedule = cls.get_today_schedule(group=group)
+            except (FatalError, ClientError, ServerError) as exc:
+                bot.send_message(chat_id=chat_id, text="Фатальная ошибка! Завершаем работу...")
+                raise FatalError(exc)
+
+            if res_schedule[0] == DayOfWeekEnum.DAY_OFF.value:
+                random_phrase = choices(DayOffPhrases.values(), weights=DayOffPhrases.get_weights(), k=1)[0]
+                if random_phrase is None:
+                    return
+                bot.send_message(chat_id=chat_id, text=random_phrase)
+            else:
+                classes = BotService.create_text_queues(schedule=res_schedule)
+                for cl in classes:
+                    bot.send_message(chat_id=chat_id, text=cl, reply_markup=inline_keyboard())
+        except ApiTelegramException:
+            pass
 
     @classmethod
     @retry(exceptions=(ClientError, ServerError), tries=task_config.TASK_MAX_RETRY, delay=task_config.TASK_RETRY_DELAY)
