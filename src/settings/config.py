@@ -13,6 +13,7 @@ class RedisConfig:
     ACTIVE_CHATS_LIST = os.getenv("REDIS_ACTIVE_CHATS_LIST", "active_chats")
     TEST_QUEUE_NAME = os.getenv("REDIS_TEST_QUEUE_NAME", "queue:test_queue_bot_db")
     REDIS_CHAT_SUPERVISOR_PREFIX = os.getenv("REDIS_CHAT_SUPERVISOR_PREFIX", "chat-supervisor?{0}")
+    REDIS_TTL = int(os.getenv("REDIS_TTL", "86400"))  # Seconds
     ENCODING = "utf-8"
 
 
