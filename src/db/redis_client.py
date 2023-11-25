@@ -20,7 +20,6 @@ class RedisClient:
     def join_queue(cls, msg_id: int, queue_name: str, username: str) -> tuple[str, str]:
         full_queue_name = f"{redis_config.QUEUE_PREFIX}{queue_name}?{msg_id}"
         client.rpush(full_queue_name, username)
-        client.persist(full_queue_name)
 
         return username, full_queue_name
 
@@ -67,7 +66,6 @@ class RedisClient:
     def add_queue_to_chat_supervisor(cls, chat_id: int, queue_name: str) -> str:
         full_chat_supervisor_name = redis_config.REDIS_CHAT_SUPERVISOR_PREFIX.format(chat_id)
         client.rpush(full_chat_supervisor_name, queue_name)
-        client.persist(full_chat_supervisor_name)
 
         return full_chat_supervisor_name
 
@@ -99,7 +97,6 @@ class RedisClient:
     @classmethod
     def add_active_chat(cls, chat_id: int) -> None:
         client.rpush(redis_config.ACTIVE_CHATS_LIST, chat_id)
-        client.persist(redis_config.ACTIVE_CHATS_LIST)
 
     @classmethod
     def list_active_chats(cls) -> list[str]:
