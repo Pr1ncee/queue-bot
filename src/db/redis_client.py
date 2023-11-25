@@ -20,6 +20,7 @@ class RedisClient:
     def join_queue(cls, msg_id: int, queue_name: str, username: str) -> tuple[str, str]:
         full_queue_name = f"{redis_config.QUEUE_PREFIX}{queue_name}?{msg_id}"
         client.rpush(full_queue_name, username)
+
         return username, full_queue_name
 
     @classmethod
@@ -65,6 +66,7 @@ class RedisClient:
     def add_queue_to_chat_supervisor(cls, chat_id: int, queue_name: str) -> str:
         full_chat_supervisor_name = redis_config.REDIS_CHAT_SUPERVISOR_PREFIX.format(chat_id)
         client.rpush(full_chat_supervisor_name, queue_name)
+
         return full_chat_supervisor_name
 
     @classmethod
@@ -75,6 +77,10 @@ class RedisClient:
         queues_msg_id = [re.search(cls.PATTERN_MSG_ID, s).group(1) for s in queue_names]
         queue_names = [re.search(cls.PATTERN_QUEUE_NAME, s).group(1) for s in queue_names]
         return queue_names, queues_msg_id
+
+    @classmethod
+    def delete_queue_from_chat_supervisor(cls, chat_id: int):
+        pass
 
     @classmethod
     def delete_outdated_queues_in_chat(cls, chat_id: int) -> list[int | None]:

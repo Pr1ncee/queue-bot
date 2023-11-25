@@ -5,7 +5,6 @@ services:
     build:
       context: .
       dockerfile: Dockerfile
-      target: queue_bot
     links:
       - "redis:db"
     env_file:
@@ -25,22 +24,6 @@ services:
     volumes:
       - redis:/var/lib/redis/data
       - ./redis.conf:/usr/local/etc/redis/redis.conf
-
-  celery_worker:
-    build:
-      context: .
-      dockerfile: Dockerfile
-      target: celery_worker
-    image: celery:3.2
-    env_file:
-      - .env
-    volumes:
-      - ./src:/app
-      - ./celery_data/celery_config:/app/celery_config
-      - ./celery_data/celery_logs:/var/log/celery
-      - ./celery_data/celery_results:/var/lib/celery/results
-    depends_on:
-      - queue_bot
 
 volumes:
   redis:
