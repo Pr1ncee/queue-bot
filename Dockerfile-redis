@@ -2,8 +2,4 @@ FROM redis:6.0.16-alpine
 
 COPY redis.conf /usr/local/etc/redis/redis.conf
 
-RUN sudo chmod 777 -R /data
-RUN sudo chmod 777 -R /etc
-RUN sudo chmod 777 -R /var
-
 CMD [ "redis-server", "/usr/local/etc/redis/redis.conf" ]
