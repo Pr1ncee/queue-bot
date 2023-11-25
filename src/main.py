@@ -32,8 +32,8 @@ def start_command(message):
     except ValueError:
         bot.send_message(chat_id=general_config.CHAT_ID, text="Введите действительную группу!")
     else:
-        bot.send_message(chat_id=message.chat.id, text="Запускаем бота... ")
-        bot.send_message(chat_id=message.chat.id, text="Скачиваем расписание... ")
+        bot.send_message(chat_id=chat_id, text="Запускаем бота... ")
+        bot.send_message(chat_id=chat_id, text="Скачиваем расписание... ")
 
         response = BotService.get_today_schedule_and_create_queues(
             bot=bot,

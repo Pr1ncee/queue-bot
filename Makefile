@@ -10,3 +10,10 @@ DOTENV_BASE_FILE ?= .env
 .PHONY: test
 test:
 	docker compose -f $(COMPOSE_FILE) exec $(IMAGE_NAME) pytest -rP
+
+.PHONY: docker-build-redis
+docker-build-redis:
+	docker build \
+		--tag=redis \
+		--file=Dockerfile-redis \
+		.
