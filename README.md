@@ -31,18 +31,20 @@ To run the bot, follow these steps:
    cd queue-bot
    ```
 
-3. Run the following command in your terminal:
+3. Create `.env` file in the repo root directory according to the `.env.sample`.
+
+4. Run the following command in your terminal:
 
     ```shell
     docker compose up --build
     ```
-4. To run tests, use the following command:
+5. To run tests, use the following command:
 
     ```shell
     make test
     ```
 
-5. To start the bot in your Telegram group:
+6. To start the bot in your Telegram group:
 
    - Search for "QueueBot" in Telegram.
    - Add the bot to your group.
