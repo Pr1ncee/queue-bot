@@ -8,7 +8,7 @@ load_dotenv()
 
 class RedisConfig:
     HOST = os.getenv("REDIS_HOST", "localhost")
-    PORT = os.getenv("REDIS_PORT", "6379")
+    PORT = os.getenv("REDIS_PORT", "6378")
     QUEUE_PREFIX = os.getenv("REDIS_QUEUE_PREFIX", "queue:")
     ACTIVE_CHATS_LIST = os.getenv("REDIS_ACTIVE_CHATS_LIST", "active_chats")
     TEST_QUEUE_NAME = os.getenv("REDIS_TEST_QUEUE_NAME", "queue:test_queue_bot_db")

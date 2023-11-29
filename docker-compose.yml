@@ -20,7 +20,7 @@ services:
     env_file:
       - .env
     ports:
-      - '6379:6379'
+      - '6378:6378'
     volumes:
       - redis:/var/lib/redis/data
       - ./redis.conf:/usr/local/etc/redis/redis.conf
