@@ -26,9 +26,8 @@ class TaskConfig:
 
 class GeneralConfig:
     TOKEN = os.getenv("TELEGRAM_BOT_TOKEN", "")
-    CHAT_ID = None
     BASE_IIS_URL = "https://iis.bsuir.by/api/v1/schedule"
-    TIMEZONE = 'Europe/Minsk'
+    TIMEZONE = "Europe/Minsk"
 
 
 redis_config = RedisConfig()

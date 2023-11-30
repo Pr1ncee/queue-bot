@@ -1,3 +1,4 @@
+import logging
 from random import choices
 
 from httpx import ConnectError
@@ -14,8 +15,12 @@ from exceptions.exceptions import FatalError, ClientError, ServerError
 from keyboards.inline_keyboard import inline_keyboard
 from services.iis_service import IISService
 from settings.config import task_config
+from settings.logging import setup_logging
 from utils.get_username_from_callback import get_username
 from utils.get_queue_name_from_callback import get_queue_name
+
+setup_logging()
+logger = logging.getLogger(__name__)
 
 
 class BotService:
@@ -85,9 +90,8 @@ class BotService:
 
             try:
                 res_schedule = cls.get_today_schedule(group=group)
-            except (FatalError, ClientError, ServerError) as exc:
-                bot.send_message(chat_id=chat_id, text="Фатальная ошибка! Завершаем работу...")
-                raise FatalError(exc)
+            except (FatalError, ClientError, ServerError):
+                return False
 
             if res_schedule[0] == DayOfWeekEnum.DAY_OFF.value:
                 random_phrase = choices(DayOffPhrases.values(), weights=DayOffPhrases.get_weights(), k=1)[0]
@@ -106,8 +110,10 @@ class BotService:
     def get_today_schedule(cls, group: int) -> list:
         try:
             today_schedule = IISService.get_today_schedule(group=group)
+            logger.info(f"Today schedule has been updated. Current schedule: {today_schedule}")
             return today_schedule
         except ConnectError:
+            logger.error("Couldn't get a schedule. An error occurred. Exiting...")
             raise FatalError(status_code=500, content={"message": "Fatal error! Exiting..."})
 
     @classmethod
