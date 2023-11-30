@@ -7,6 +7,7 @@ load_dotenv()
 
 
 class RedisConfig:
+    PASS = os.getenv("REDIS_PASS", "redis")
     HOST = os.getenv("REDIS_HOST", "localhost")
     PORT = os.getenv("REDIS_PORT", "6379")
     QUEUE_PREFIX = os.getenv("REDIS_QUEUE_PREFIX", "queue:")

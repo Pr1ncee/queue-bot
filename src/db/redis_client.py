@@ -8,7 +8,8 @@ client = redis.Redis(
     host=redis_config.HOST,
     port=redis_config.PORT,
     encoding=redis_config.ENCODING,
-    decode_responses=True
+    decode_responses=True,
+    password=redis_config.PASS
 )
 
 
