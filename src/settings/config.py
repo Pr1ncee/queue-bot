@@ -7,6 +7,7 @@ load_dotenv()
 
 
 class RedisConfig:
+    PASS = os.getenv("REDIS_PASS", "redis")
     HOST = os.getenv("REDIS_HOST", "localhost")
     PORT = os.getenv("REDIS_PORT", "6379")
     QUEUE_PREFIX = os.getenv("REDIS_QUEUE_PREFIX", "queue:")
@@ -16,21 +17,18 @@ class RedisConfig:
     ENCODING = "utf-8"
 
 
-class CeleryConfig:
-    CELERY_BROKER_URL = os.getenv("CELERY_BROKER_URL", "")
-    CELERY_RESULT_BACKEND = os.getenv("CELERY_RESULT_BACKEND", "")
-    TASK_REPEAT_EVERY_HOURS = int(os.getenv("CELERY_TASK_REPEAT_EVERY_HOURS", "24"))
-    TASK_MAX_RETRY = 100
-    TASK_RETRY_DELAY = 60  # Seconds
+class TaskConfig:
+    TASK_MAX_RETRY = int(os.getenv("TASK_MAX_RETRY", "100"))
+    TASK_RETRY_DELAY = int(os.getenv("TASK_RETRY_DELAY", "60"))  # Seconds
+    TASK_TIME_TO_REPEAT = os.getenv("TASK_TIME_TO_REPEAT", "00:00")
 
 
 class GeneralConfig:
     TOKEN = os.getenv("TELEGRAM_BOT_TOKEN", "")
-    CHAT_ID = None
     BASE_IIS_URL = "https://iis.bsuir.by/api/v1/schedule"
-    TIMEZONE = 'Europe/Minsk'
+    TIMEZONE = "Europe/Minsk"
 
 
 redis_config = RedisConfig()
-celery_config = CeleryConfig()
+task_config = TaskConfig()
 general_config = GeneralConfig()

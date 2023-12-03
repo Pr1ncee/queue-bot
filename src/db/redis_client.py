@@ -1,14 +1,20 @@
+import logging
 import re
 
 import redis
 
+from settings.logging import setup_logging
 from src.settings.config import redis_config
+
+setup_logging()
+logger = logging.getLogger(__name__)
 
 client = redis.Redis(
     host=redis_config.HOST,
     port=redis_config.PORT,
     encoding=redis_config.ENCODING,
-    decode_responses=True
+    decode_responses=True,
+    password=redis_config.PASS
 )
 
 
@@ -19,7 +25,9 @@ class RedisClient:
     @classmethod
     def join_queue(cls, msg_id: int, queue_name: str, username: str) -> tuple[str, str]:
         full_queue_name = f"{redis_config.QUEUE_PREFIX}{queue_name}?{msg_id}"
+        logger.info(f"Moving {username} to the {full_queue_name} queue...")
         client.rpush(full_queue_name, username)
+
         return username, full_queue_name
 
     @classmethod
@@ -31,6 +39,7 @@ class RedisClient:
     @classmethod
     def remove_from_queue(cls, msg_id: int, queue_name: str, username: str) -> str:
         full_queue_name = f"{redis_config.QUEUE_PREFIX}{queue_name}?{msg_id}"
+        logger.info(f"Removing {username} from {full_queue_name} queue...")
         client.lrem(full_queue_name, 0, username)
         return username
 
@@ -59,12 +68,17 @@ class RedisClient:
     @classmethod
     def clear_queue(cls, msg_id: int, queue_name: str) -> None:
         full_queue_name = f"{redis_config.QUEUE_PREFIX}{queue_name}?{msg_id}"
+        logger.info(f"Clearing {full_queue_name} queue...")
         client.delete(full_queue_name)
 
     @classmethod
     def add_queue_to_chat_supervisor(cls, chat_id: int, queue_name: str) -> str:
         full_chat_supervisor_name = redis_config.REDIS_CHAT_SUPERVISOR_PREFIX.format(chat_id)
-        client.rpush(full_chat_supervisor_name, queue_name)
+
+        if queue_name not in client.lrange(full_chat_supervisor_name, 0, -1):
+            logger.info(f"Adding the chat {chat_id} to the chat supervisor {full_chat_supervisor_name}...")
+            client.rpush(full_chat_supervisor_name, queue_name)
+
         return full_chat_supervisor_name
 
     @classmethod
@@ -74,12 +88,19 @@ class RedisClient:
 
         queues_msg_id = [re.search(cls.PATTERN_MSG_ID, s).group(1) for s in queue_names]
         queue_names = [re.search(cls.PATTERN_QUEUE_NAME, s).group(1) for s in queue_names]
+        logger.info(f"Current active queues: {queue_names}")
         return queue_names, queues_msg_id
+
+    @classmethod
+    def delete_queue_from_chat_supervisor(cls, chat_id: int):
+        # TODO Implement this logic for multi group support
+        pass
 
     @classmethod
     def delete_outdated_queues_in_chat(cls, chat_id: int) -> list[int | None]:
         queue_names, queue_ids = cls.list_current_queues_in_chat(chat_id)
 
+        logger.info(f"Deleting outdated queues: {queue_names}...")
         for queue_name, queue_id in zip(queue_names, queue_ids):
             cls.clear_queue(queue_name=queue_name, msg_id=queue_id)
 
@@ -90,6 +111,7 @@ class RedisClient:
 
     @classmethod
     def add_active_chat(cls, chat_id: int) -> None:
+        logger.info(f"Adding active chat {chat_id}...")
         client.rpush(redis_config.ACTIVE_CHATS_LIST, chat_id)
 
     @classmethod
@@ -99,6 +121,7 @@ class RedisClient:
 
     @classmethod
     def clear_db(cls) -> None:
+        logger.warning("Clearing the whole database!")
         client.flushall()
 
     @classmethod
