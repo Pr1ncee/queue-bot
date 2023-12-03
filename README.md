@@ -33,18 +33,20 @@ To run the bot, follow these steps:
 
 3. Create `.env` file in the repo root directory according to the `.env.sample`.
 
-4. Run the following command in your terminal:
+4. Enter a valid password in both `.env` & `redis.conf` files for Redis database.
+
+5. Run the following command in your terminal:
 
     ```shell
     docker compose up --build
     ```
-5. To run tests, use the following command:
+6. To run tests, use the following command:
 
     ```shell
     make test
     ```
 
-6. To start the bot in your Telegram group:
+7. To start the bot in your Telegram group:
 
    - Search for "QueueBot" in Telegram.
    - Add the bot to your group.
