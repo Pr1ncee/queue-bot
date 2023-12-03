@@ -37,18 +37,22 @@ class IISService:
 
     @classmethod
     def get_today_schedule(cls, group: int) -> list:
-        full = IISService.get_schedule(group=group)
+        tomorrow_day = DayOfWeekEnum.get_tomorrow_day()
+
+        if tomorrow_day.__str__() == cls.DAY_OFF:
+            return [cls.DAY_OFF]
+
         week = IISService.get_current_week()
+        if tomorrow_day.__str__() == "Понедельник":
+            week = (week % 4) + 1
+
+        full = IISService.get_schedule(group=group)
 
         schedules = full.get("schedules", {})
         if not schedules:
             return []
 
-        today_day = DayOfWeekEnum.get_today_day()
-        if today_day.__str__() == cls.DAY_OFF:
-            return [cls.DAY_OFF]
-
-        lessons = [lesson for lesson in schedules[f"{today_day}"] if week in lesson['weekNumber']]
+        lessons = [lesson for lesson in schedules[f"{tomorrow_day}"] if week in lesson['weekNumber']]
         return lessons
 
     @staticmethod

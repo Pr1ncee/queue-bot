@@ -74,8 +74,10 @@ class RedisClient:
     @classmethod
     def add_queue_to_chat_supervisor(cls, chat_id: int, queue_name: str) -> str:
         full_chat_supervisor_name = redis_config.REDIS_CHAT_SUPERVISOR_PREFIX.format(chat_id)
-        logger.info(f"Adding the chat {chat_id} to the chat supervisor {full_chat_supervisor_name}...")
-        client.rpush(full_chat_supervisor_name, queue_name)
+
+        if queue_name not in client.lrange(full_chat_supervisor_name, 0, -1):
+            logger.info(f"Adding the chat {chat_id} to the chat supervisor {full_chat_supervisor_name}...")
+            client.rpush(full_chat_supervisor_name, queue_name)
 
         return full_chat_supervisor_name
 

@@ -51,6 +51,20 @@ To run the bot, follow these steps:
    - Type `/start 'group name'` to initialize the bot.
    - Enjoy! QueueBot will automatically fetch and update schedules from IIS and create queues for Practical & Laboratory Classes. It also manages and deletes outdated queues in the chat.
 
+## Understanding Queue-bot architecture
+
+Basically, this bot based on in-memory high performance `Redis` database. Since this database lightweight and dynamic
+(in the context of creating data structures) the architecture of Queue-bot built upon `list` data structure.
+Therefore, there are several lists created for a queue. For example, we have one queue called **Queue1** with **1111** id and one active chat **123**.
+In the database all this info will be stored in 3 queues:
+
+1. `REDIS_ACTIVE_CHATS_LIST` env variable stores all chats where the bot is running right now. It prevents from running the bot twice when the bot has been already running.
+2. `REDIS_CHAT_SUPERVISOR_PREFIX` Used to support multi group handling...(**TODO**)
+3. `REDIS_QUEUE_PREFIX` variable used to be as a prefix in queues to unique identify active queues.
+
+So the format of a queue is: <queue prefix>:<queue name(based on the subject)>?<message id (it'll be used for deleting this queue when it's outdated)>
+
+
 ## Note
 
 IIS stands for the Integrated Information System for BSUIR (Belarusian State University of Informatics and Radioelectronics).

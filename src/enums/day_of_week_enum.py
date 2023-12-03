@@ -1,5 +1,5 @@
 import pytz
-from datetime import datetime
+from datetime import datetime, timedelta
 
 from enums.base_enum import BaseEnum
 from settings.config import general_config
@@ -19,6 +19,7 @@ class DayOfWeekEnum(BaseEnum):
         return ["Понедельник", "Вторник", "Среда", "Четверг", "Пятница", "Суббота", "Воскресенье"][self.value]
 
     @staticmethod
-    def get_today_day():
-        current_day = datetime.now(pytz.timezone(general_config.TIMEZONE)).weekday()
-        return DayOfWeekEnum(current_day)
+    def get_tomorrow_day():
+        current_datetime = datetime.now(pytz.timezone(general_config.TIMEZONE))
+        tomorrow_datetime = current_datetime + timedelta(days=1)
+        return DayOfWeekEnum(tomorrow_datetime.weekday())
