@@ -60,8 +60,8 @@ Basically, this bot based on in-memory high performance `Redis` database. Since 
 Therefore, there are several lists created for a queue. For example, we have one queue called **Queue1** with **1111** id and one active chat **123**.
 In the database all this info will be stored in 3 queues:
 
-1. `REDIS_ACTIVE_CHATS_LIST` env variable stores all chats where the bot is running right now. It prevents from running the bot twice when the bot has been already running.
-2. `REDIS_CHAT_SUPERVISOR_PREFIX` Used to support multi group handling...(**TODO**)
+1. `REDIS_ACTIVE_CHATS_LIST` env variable represents a structure that stores all chats where the bot is running right now. It prevents from running the bot twice when the bot has been already running.
+2. `REDIS_CHAT_SUPERVISOR_PREFIX` this variable are part of a list that stores all active queues in a chat. Used to delete outdated queues.
 3. `REDIS_QUEUE_PREFIX` variable used to be as a prefix in queues to unique identify active queues.
 
 So the format of a queue is: <queue prefix>:<queue name(based on the subject)>?<message id (it'll be used for deleting this queue when it's outdated)>
