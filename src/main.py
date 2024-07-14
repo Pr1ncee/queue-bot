@@ -16,6 +16,7 @@ bot = telebot.TeleBot(general_config.TOKEN)
 
 setup_logging()
 logger = logging.getLogger(__name__)
+bot_service = BotService()
 
 
 @bot.message_handler(commands=['start'])
@@ -43,14 +44,13 @@ def start_command(message):
         bot.send_message(chat_id=chat_id, text="Запускаем бота... ")
         bot.send_message(chat_id=chat_id, text="Скачиваем расписание... ")
 
-    active_chats = BotService.list_active_chats()
-    is_chat_new = str(chat_id) in active_chats
-    logger.info(f"Current chat is new: {is_chat_new}")
-    if is_chat_new:
+    is_chat_active = bot_service.is_chat_active(chat_id=chat_id)
+    logger.info(f"Current chat is new: {is_chat_active}")
+    if is_chat_active:
         bot.send_message(chat_id=chat_id, text="Данный чат уже используется!")
         return
 
-    response = BotService.make_queues(
+    response = bot_service.make_queues(
         bot=bot,
         chat_id=chat_id,
         group=group,
@@ -62,11 +62,11 @@ def start_command(message):
         )
         return
 
-    BotService.add_active_chat(chat_id=chat_id)
+    bot_service.add_active_chat(chat_id=chat_id)
 
     logger.info(f"Scheduling every day task at {task_config.TASK_TIME_TO_REPEAT}. Chat id - {chat_id}. Group - {group}")
     schedule.every().day.at(task_config.TASK_TIME_TO_REPEAT).do(
-        BotService.make_queues,
+        bot_service.make_queues,
         bot=bot,
         group=group,
         chat_id=chat_id,
@@ -94,7 +94,7 @@ def clear_command(message):
         f"/clear command called by {message.from_user.username}. Is bot: {message.from_user.is_bot}. \
         Clearing the database"
     )
-    BotService.clear_db()
+    bot_service.clear_db()
 
 
 @bot.callback_query_handler(func=lambda call: True)
@@ -102,7 +102,7 @@ def callback_query(call):
     chat_id = call.message.chat.id
     message_id = call.message.message_id
     if call.data == CallbackEnum.JOIN_QUEUE.value:
-        msg = BotService.join_queue(call=call)
+        msg = bot_service.join_queue(call=call)
         if msg["status"] == ResponseEnum.SUCCESS.value:
             bot.edit_message_text(
                 text=msg["msg"],
@@ -114,7 +114,7 @@ def callback_query(call):
         elif msg["status"] == ResponseEnum.FAILED.value:
             bot.answer_callback_query(call.id, msg["msg"])
     elif call.data == CallbackEnum.LEAVE_QUEUE.value:
-        msg = BotService.leave_queue(call=call)
+        msg = bot_service.leave_queue(call=call)
         if msg["status"] == ResponseEnum.SUCCESS.value:
             bot.edit_message_text(
                 text=msg["msg"],
@@ -126,7 +126,7 @@ def callback_query(call):
         elif msg["status"] == ResponseEnum.FAILED.value:
             bot.answer_callback_query(call.id, msg["msg"])
     elif call.data == CallbackEnum.CLOSE_QUEUE.value and call.from_user.username == "Andrey_Strongin":
-        BotService.close_queue(call=call)
+        bot_service.close_queue(call=call)
         bot.delete_message(chat_id=chat_id, message_id=message_id)
         bot.answer_callback_query(call.id, "Очередь закрылась!")
 

@@ -12,3 +12,4 @@ src/celerybeat-schedule
 redis.conf
 
 redis/
+mongo/

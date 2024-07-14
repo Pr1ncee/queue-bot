@@ -3,12 +3,10 @@ import logging
 import httpx
 import json
 
-from enums.day_of_week_enum import DayOfWeekEnum
-from exceptions.exceptions import ServerError, ClientError
-from settings.config import general_config
-from settings.logging import setup_logging
+from src.enums.day_of_week_enum import DayOfWeekEnum
+from src.exceptions.exceptions import ServerError, ClientError
+from src.settings.config import general_config
 
-setup_logging()
 logger = logging.getLogger(__name__)
 
 

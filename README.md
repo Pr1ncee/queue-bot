@@ -55,7 +55,22 @@ To run the bot, follow these steps:
 
 ## Understanding Queue-bot architecture
 
-Basically, this bot based on in-memory high performance `Redis` database. Since this database lightweight and dynamic
+### MongoDB
+
+The current implementation of the bot relies on MongoDB as a persistent database.
+There are several reasons why I migrated from Redis to Mongo:
+1. Mongo is a persistent database and doesn't have any TTL, therefore, it's easier to set up and configure it;
+2. Since all the data is stored in collections and documents, it's easier to organize queues into documents 
+and separate some internal stuff (such as active chats) in different collections.
+
+There are two collections: *Internal* and *Queue*.
+The former is about storing chats' metadata and the latter is for storing queues itself.
+Queues are organized into documents (document per queue), it has several unique fields 
+(chat ID, message ID and queue name) and field for storing people in the queue.
+
+### Redis (deprecated)
+
+Basically, this bot can be based on in-memory high performance `Redis` database. Since this database lightweight and dynamic
 (in the context of creating data structures) the architecture of Queue-bot built upon `list` data structure.
 Therefore, there are several lists created for a queue. For example, we have one queue called **Queue1** with **1111** id and one active chat **123**.
 In the database all this info will be stored in 3 queues:
@@ -65,7 +80,6 @@ In the database all this info will be stored in 3 queues:
 3. `REDIS_QUEUE_PREFIX` variable used to be as a prefix in queues to unique identify active queues.
 
 So the format of a queue is: <queue prefix>:<queue name(based on the subject)>?<message id (it'll be used for deleting this queue when it's outdated)>
-
 
 ## Note
 
