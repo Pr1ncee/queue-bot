@@ -3,10 +3,8 @@ import re
 
 import redis
 
-from settings.logging import setup_logging
 from src.settings.config import redis_config
 
-setup_logging()
 logger = logging.getLogger(__name__)
 
 client = redis.Redis(
@@ -14,11 +12,13 @@ client = redis.Redis(
     port=redis_config.PORT,
     encoding=redis_config.ENCODING,
     decode_responses=True,
-    password=redis_config.PASS
 )
 
 
 class RedisClient:
+    """
+    This service is DEPRECATED and should be removed in the future
+    """
     PATTERN_MSG_ID = r'\?(\d*)'
     PATTERN_QUEUE_NAME = fr'{redis_config.QUEUE_PREFIX}(.*?)\?'
 

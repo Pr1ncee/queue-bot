@@ -7,89 +7,84 @@ from telebot import TeleBot
 from telebot.apihelper import ApiTelegramException
 from telebot.types import CallbackQuery
 
-from db.redis_client import RedisClient
-from enums.day_of_week_enum import DayOfWeekEnum
-from enums.day_off_phrases import DayOffPhrases
-from enums.response_enum import ResponseEnum
-from exceptions.exceptions import FatalError, ClientError, ServerError
-from keyboards.inline_keyboard import inline_keyboard
-from services.iis_service import IISService
-from settings.config import task_config
-from settings.logging import setup_logging
-from utils.get_username_from_callback import get_username
-from utils.get_queue_name_from_callback import get_queue_name
+from src.db.mongo_client import MongoDBClient
+from src.entities.active_chat import ActiveChatEntity
+from src.entities.queue import QueueEntity
+from src.enums.day_of_week_enum import DayOfWeekEnum
+from src.enums.day_off_phrases import DayOffPhrases
+from src.enums.response_enum import ResponseEnum
+from src.exceptions.exceptions import FatalError, ClientError, ServerError
+from src.keyboards.inline_keyboard import inline_keyboard
+from src.services.iis_service import IISService
+from src.settings.config import task_config
+from src.utils.get_username_from_callback import get_username
+from src.utils.get_queue_name_from_callback import get_queue_name
 
-setup_logging()
 logger = logging.getLogger(__name__)
 
 
 class BotService:
-    @classmethod
-    def join_queue(cls, call: CallbackQuery) -> dict[str, str]:
+    def __init__(self):
+        self.mongo_client = MongoDBClient()
+
+    def join_queue(self, call: CallbackQuery) -> dict[str, str]:
         username = get_username(call=call)
         queue_name = get_queue_name(call=call)
-        if not (username in RedisClient.list_queue(queue_name=queue_name, msg_id=call.message.id)):
-            queue_exists = RedisClient.queue_exists_in_chat_supervisor(
-                queue_name=queue_name,
-                msg_id=call.message.id
-            )
-            username, full_queue_name = RedisClient.join_queue(
-                queue_name=queue_name,
-                username=username,
-                msg_id=call.message.id
-            )
-
-            if not queue_exists:
-                RedisClient.add_queue_to_chat_supervisor(
+        msg_id = call.message.id
+        if not self.mongo_client.is_already_in_queue(username=username, queue_name=queue_name, msg_id=msg_id):
+            people_to_add = [username]
+            if not self.mongo_client.get_queue(name=queue_name, msg_id=msg_id):
+                queue_entity = QueueEntity(
                     chat_id=call.message.chat.id,
-                    queue_name=full_queue_name
+                    msg_id=msg_id,
+                    name=queue_name,
+                    people=people_to_add
                 )
+                self.mongo_client.create_queue(queue_entity=queue_entity)
+            self.mongo_client.add_people_to_queue(msg_id=msg_id, people=people_to_add)
 
-            msg = cls.update_queue(queue_name=queue_name, msg_id=call.message.id)
+            msg = self.update_queue(queue_name=queue_name, msg_id=msg_id)
             return {"status": ResponseEnum.SUCCESS.value, "msg": msg}
         return {"status": ResponseEnum.FAILED.value, "msg": "Вы уже встали в эту очередь!"}
 
-    @classmethod
-    def leave_queue(cls, call: CallbackQuery) -> dict[str, str]:
+    def leave_queue(self, call: CallbackQuery) -> dict[str, str]:
         username = get_username(call=call)
         queue_name = get_queue_name(call=call)
-        if username in RedisClient.list_queue(queue_name=queue_name, msg_id=call.message.id):
-            RedisClient.remove_from_queue(queue_name=queue_name, username=username, msg_id=call.message.id)
+        msg_id = call.message.id
+        if self.mongo_client.is_already_in_queue(username=username, name=queue_name, msg_id=msg_id):
+            self.mongo_client.remove_from_queue(username=username, msg_id=msg_id)
 
-            msg = cls.update_queue(queue_name=queue_name, msg_id=call.message.id)
+            msg = self.update_queue(queue_name=queue_name, msg_id=msg_id)
             return {"status": ResponseEnum.SUCCESS.value, "msg": msg}
         return {"status": ResponseEnum.FAILED.value, "msg": "Вы не находитесь в этой очереди!"}
 
-    @classmethod
-    def close_queue(cls, call: CallbackQuery) -> None:
+    def close_queue(self, call: CallbackQuery) -> None:
         queue_name = get_queue_name(call=call)
-        RedisClient.clear_queue(queue_name=queue_name, msg_id=call.message.id)
+        self.mongo_client.delete_queue(name=queue_name, msg_id=call.message.id, chat_id=call.message.chat.id)
 
-    @classmethod
-    def update_queue(cls, msg_id: int, queue_name: str) -> str:
-        waiting_people = RedisClient.list_queue(queue_name=queue_name, msg_id=msg_id)
+    def update_queue(self, msg_id: int, queue_name: str) -> str:
+        waiting_people = self.mongo_client.get_queue(name=queue_name, msg_id=msg_id)
 
-        msg = queue_name
-        for index, user in enumerate(waiting_people):
-            msg += f"\n{index + 1}. {user}"
-        return msg
+        if waiting_people:
+            msg = queue_name
+            for index, user in enumerate(waiting_people.people):
+                msg += f"\n{index + 1}. {user}"
+            return msg
 
-    @classmethod
-    def clear_db(cls) -> None:
-        RedisClient.clear_db()
+    def clear_db(self) -> None:
+        self.mongo_client.delete_all_queues()
 
-    @classmethod
     def make_queues(
-            cls,
+            self,
             bot: TeleBot,
             chat_id: int,
             group: int,
     ) -> None | bool:
         try:
-            cls.delete_outdated_resources(bot=bot, chat_id=chat_id)
+            self.delete_outdated_resources(bot=bot, chat_id=chat_id)
 
             try:
-                res_schedule = cls.get_today_schedule(group=group)
+                res_schedule = self.get_today_schedule(group=group)
             except (FatalError, ClientError, ServerError):
                 return False
 
@@ -99,15 +94,14 @@ class BotService:
                     return
                 bot.send_message(chat_id=chat_id, text=random_phrase)
             else:
-                classes = BotService.create_text_queues(schedule=res_schedule)
+                classes = self.create_text_queues(schedule=res_schedule)
                 for cl in classes:
                     bot.send_message(chat_id=chat_id, text=cl, reply_markup=inline_keyboard())
         except ApiTelegramException:
             pass
 
-    @classmethod
     @retry(exceptions=(ClientError, ServerError), tries=task_config.TASK_MAX_RETRY, delay=task_config.TASK_RETRY_DELAY)
-    def get_today_schedule(cls, group: int) -> list:
+    def get_today_schedule(self, group: int) -> list:
         try:
             today_schedule = IISService.get_today_schedule(group=group)
             logger.info(f"Today schedule has been updated. Current schedule: {today_schedule}")
@@ -116,8 +110,7 @@ class BotService:
             logger.error("Couldn't get a schedule. An error occurred. Exiting...")
             raise FatalError(status_code=500, content={"message": "Fatal error! Exiting..."})
 
-    @classmethod
-    def create_text_queues(cls, schedule) -> list[str]:
+    def create_text_queues(self, schedule) -> list[str]:
         pairs = filter(lambda it: it['lessonTypeAbbrev'] == 'ЛР', schedule)
 
         queues = []
@@ -127,17 +120,14 @@ class BotService:
             queues.append(msg)
         return queues
 
-    @classmethod
-    def delete_outdated_resources(cls, bot: TeleBot, chat_id: int) -> None:
-        queue_ids = RedisClient.delete_outdated_queues_in_chat(chat_id=chat_id)
+    def delete_outdated_resources(self, bot: TeleBot, chat_id: int) -> None:
+        queue_ids = self.mongo_client.delete_outdated_queues(chat_id=chat_id)
 
         for msg_id in queue_ids:
             bot.delete_message(chat_id=chat_id, message_id=msg_id)
 
-    @classmethod
-    def add_active_chat(cls, chat_id: int) -> None:
-        RedisClient.add_active_chat(chat_id=chat_id)
+    def add_active_chat(self, chat_id: int) -> None:
+        self.mongo_client.add_active_chat(active_chat=ActiveChatEntity(active_chats=[chat_id]))
 
-    @classmethod
-    def list_active_chats(cls) -> list[str]:
-        return RedisClient.list_active_chats()
+    def is_chat_active(self, chat_id: int) -> bool:
+        return self.mongo_client.is_chat_active(chat_id=chat_id)

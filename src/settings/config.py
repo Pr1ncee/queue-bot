@@ -6,6 +6,14 @@ from dotenv import load_dotenv
 load_dotenv()
 
 
+class MongoDBConfig:
+    HOST = os.getenv("MONGO_HOST", "db")
+    PORT = int(os.getenv("MONGO_PORT", 27017))
+    DB_NAME = os.getenv("MONGO_DB_NAME", "Queue-db")
+    QUEUE_COLLECTION_NAME = os.getenv("MONGO_COLLECTION_NAME", "Queue-coll")
+    INTERNAL_COLLECTION_NAME = os.getenv("MONGO_INTERNAL_COLLECTION_NAME", "Internal-coll")
+
+
 class RedisConfig:
     PASS = os.getenv("REDIS_PASS", "redis")
     HOST = os.getenv("REDIS_HOST", "localhost")
@@ -29,6 +37,7 @@ class GeneralConfig:
     TIMEZONE = "Europe/Minsk"
 
 
+mongo_config = MongoDBConfig()
 redis_config = RedisConfig()
 task_config = TaskConfig()
 general_config = GeneralConfig()
