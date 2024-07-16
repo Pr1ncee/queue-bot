@@ -30,7 +30,7 @@ logs: # Connect to the docker logs. You can see all the stuff happening inside
 	docker compose --profile mongodb -f $(COMPOSE_FILE) logs --follow
 
 .PHONY: test
-test: # Start tests
+test: # Start tests for Redis (deprecated)
 	docker compose -f $(COMPOSE_FILE) exec $(SERVICE_NAME) pytest -rP
 
 .PHONY: build-queue-bot
